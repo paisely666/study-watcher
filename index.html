@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Study Watcher - 学习监督小工具</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#3366cc">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="督学">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+  <!-- ===== 顶部导航栏 ===== -->
+  <nav class="nav" id="nav">
+    <button class="nav__btn nav__btn--active" data-tab="home">首页</button>
+    <button class="nav__btn" data-tab="courses">课表</button>
+    <button class="nav__btn" data-tab="tasks">任务</button>
+    <button class="nav__btn" data-tab="rules">奖励规则</button>
+    <button class="nav__btn" data-tab="review">复盘</button>
+  </nav>
+
+  <!-- ===== 首页 ===== -->
+  <main class="page page--active" id="page-home">
+    <section class="card">
+      <h2 class="card__title">今日日期</h2>
+      <p class="home__date" id="homeDate">--</p>
+      <button class="btn btn--sleep" id="btnSleep">睡觉</button>
+    </section>
+
+    <section class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h2 class="card__title" style="border:none;margin:0;padding:0;">今日时间线</h2>
+        <button class="btn btn--small" id="btnOCR" title="上传截图识别任务">📷 识别截图</button>
+        <input type="file" id="ocrFileInput" accept="image/*" style="display:none;">
+      </div>
+      <div id="homeTimeline"><p class="empty">暂无安排</p></div>
+    </section>
+
+    <section class="card">
+      <h2 class="card__title">安排合理性评价</h2>
+      <div id="homeEvaluation"><p class="empty">暂无任务，无法评价</p></div>
+    </section>
+  </main>
+
+  <!-- ===== 课表管理 ===== -->
+  <main class="page" id="page-courses">
+    <section class="card">
+      <h2 class="card__title">新增课程</h2>
+      <form class="form" id="formCourse">
+        <label class="form__label">课程名 <input class="form__input" name="name" required placeholder="例如：高等数学"></label>
+        <label class="form__label">星期
+          <select class="form__input" name="dayOfWeek" required>
+            <option value="">请选择</option>
+            <option value="1">周一</option>
+            <option value="2">周二</option>
+            <option value="3">周三</option>
+            <option value="4">周四</option>
+            <option value="5">周五</option>
+            <option value="6">周六</option>
+            <option value="7">周日</option>
+          </select>
+        </label>
+        <div class="form__row">
+          <label class="form__label">开始时间 <input class="form__input" type="time" name="startTime" required></label>
+          <label class="form__label">结束时间 <input class="form__input" type="time" name="endTime" required></label>
+        </div>
+        <div class="form__row">
+          <label class="form__label">起始周 <input class="form__input" type="number" name="startWeek" value="1" min="1" max="20" required></label>
+          <label class="form__label">结束周 <input class="form__input" type="number" name="endWeek" value="16" min="1" max="20" required></label>
+        </div>
+        <label class="form__label">地点 <input class="form__input" name="location" placeholder="例如：教学楼A201"></label>
+        <label class="form__label">学分
+          <select class="form__input" name="credits" required>
+            <option value="">请选择</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+        </label>
+        <button class="btn btn--primary" type="submit">新增课程</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2 class="card__title">全部课程</h2>
+      <div id="courseList"><p class="empty">暂无课程，请先添加</p></div>
+    </section>
+  </main>
+
+  <!-- ===== 任务备忘录 ===== -->
+  <main class="page" id="page-tasks">
+    <section class="card">
+      <h2 class="card__title">新增任务</h2>
+      <form class="form" id="formTask">
+        <label class="form__label">任务内容
+          <textarea class="form__input form__textarea" name="content" required placeholder="例如：线代第三章作业（周五截止）&#10;周六下午出去玩，不能学习"></textarea>
+        </label>
+        <label class="form__label">预测用时</label>
+        <div class="time-presets" id="timePresets">
+          <button type="button" class="btn btn--preset" data-min="15">15 分钟</button>
+          <button type="button" class="btn btn--preset" data-min="30">30 分钟</button>
+          <button type="button" class="btn btn--preset" data-min="45">45 分钟</button>
+          <button type="button" class="btn btn--preset" data-min="60">60 分钟</button>
+          <button type="button" class="btn btn--preset btn--preset-custom" data-min="custom">自定义</button>
+        </div>
+        <input class="form__input form__input--custom-time" type="number" id="customMinutes" placeholder="自定义分钟数" min="1" style="display:none;">
+        <input type="hidden" name="estimatedMinutes" id="estimatedMinutes" value="30">
+
+        <label class="form__label">预计执行时间 <input class="form__input" type="datetime-local" name="scheduledTime" required></label>
+        <button class="btn btn--primary" type="submit">新增任务</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2 class="card__title">任务列表</h2>
+      <div class="filter-bar">
+        <button class="btn btn--filter btn--filter-active" data-filter="all">全部</button>
+        <button class="btn btn--filter" data-filter="today">今天</button>
+        <button class="btn btn--filter" data-filter="pending">未完成</button>
+      </div>
+      <div id="taskList"><p class="empty">暂无任务，请先添加</p></div>
+    </section>
+  </main>
+
+  <!-- ===== 奖励与补救规则 ===== -->
+  <main class="page" id="page-rules">
+    <section class="card">
+      <h2 class="card__title">奖励规则</h2>
+      <form class="form" id="formReward">
+        <label class="form__label">规则名 <input class="form__input" name="name" required placeholder="例如：完成今日核心任务"></label>
+        <label class="form__label">触发条件
+          <select class="form__input" name="condition" required>
+            <option value="">请选择</option>
+            <option value="all_complete">完成今日全部任务</option>
+            <option value="core_complete">完成核心任务（≥60分钟）</option>
+            <option value="streak3">连续3天完成率≥70%</option>
+          </select>
+        </label>
+        <label class="form__label">奖励内容 <input class="form__input" name="reward" required placeholder="例如：小红书 20 分钟"></label>
+        <button class="btn btn--primary" type="submit">新增奖励规则</button>
+      </form>
+      <div id="rewardList"><p class="empty">暂无奖励规则</p></div>
+    </section>
+
+    <section class="card">
+      <h2 class="card__title">补救规则</h2>
+      <form class="form" id="formRescue">
+        <label class="form__label">规则名 <input class="form__input" name="name" required placeholder="例如：未完成主要任务"></label>
+        <label class="form__label">触发条件
+          <select class="form__input" name="condition" required>
+            <option value="">请选择</option>
+            <option value="incomplete_core">未完成主要任务</option>
+            <option value="postpone2">连续推迟 ≥2 次</option>
+            <option value="slacking2">摸鱼 ≥2 次</option>
+            <option value="complete_low">完成率低于 50%</option>
+          </select>
+        </label>
+        <label class="form__label">补救措施 <input class="form__input" name="measure" required placeholder="例如：明天优先补"></label>
+        <button class="btn btn--primary" type="submit">新增补救规则</button>
+      </form>
+      <div id="rescueList"><p class="empty">暂无补救规则</p></div>
+    </section>
+  </main>
+
+  <!-- ===== 每日复盘 ===== -->
+  <main class="page" id="page-review">
+    <section class="card">
+      <h2 class="card__title">选择日期</h2>
+      <input class="form__input" type="date" id="reviewDate">
+      <button class="btn btn--primary" id="btnReviewLoad" style="margin-top:8px;">查看复盘</button>
+    </section>
+
+    <section class="card">
+      <h2 class="card__title">复盘概览</h2>
+      <div id="reviewSummary"><p class="empty">请选择日期查看复盘</p></div>
+    </section>
+
+    <section class="card">
+      <h2 class="card__title">执行情况可视化</h2>
+      <div id="reviewVisual"><p class="empty">请选择日期查看</p></div>
+    </section>
+
+    <section class="card">
+      <h2 class="card__title">系统建议</h2>
+      <div id="reviewAdvice"><p class="empty">--</p></div>
+    </section>
+  </main>
+
+  <!-- ===== 追问弹窗（默认隐藏） ===== -->
+  <div class="overlay" id="overlayReminder" style="display:none;">
+    <div class="dialog">
+      <h3 class="dialog__title">⏰ 学习时间提醒</h3>
+      <p class="dialog__msg" id="reminderMsg"></p>
+      <div class="dialog__btns">
+        <button class="btn btn--studying" data-action="start">正在学</button>
+        <button class="btn btn--ready" data-action="ready">准备开始</button>
+        <button class="btn btn--postpone" data-action="postpone">推迟 10 分钟</button>
+        <button class="btn btn--slacking" data-action="slacking">摸鱼了</button>
+        <button class="btn btn--abandon" data-action="abandon">今天不做了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 放弃原因弹窗（默认隐藏） ===== -->
+  <div class="overlay" id="overlayAbandon" style="display:none;">
+    <div class="dialog">
+      <h3 class="dialog__title">为什么今天不做了？</h3>
+      <div class="dialog__reasons" id="abandonReasons">
+        <button class="btn btn--reason" data-reason="太累">太累</button>
+        <button class="btn btn--reason" data-reason="时间不够">时间不够</button>
+        <button class="btn btn--reason" data-reason="任务太难">任务太难</button>
+        <button class="btn btn--reason" data-reason="临时有事">临时有事</button>
+        <button class="btn btn--reason" data-reason="不想学">不想学</button>
+        <button class="btn btn--reason" data-reason="安排太满">安排太满</button>
+        <button class="btn btn--reason" data-reason="其他">其他</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 睡觉总结弹窗（默认隐藏） ===== -->
+  <div class="overlay" id="overlaySleep" style="display:none;">
+    <div class="dialog dialog--sleep">
+      <h3 class="dialog__title">今日总结</h3>
+      <div id="sleepSummaryContent"></div>
+      <button class="btn btn--primary" id="btnCloseSleep">知道了</button>
+    </div>
+  </div>
+
+  <!-- ===== 降级建议弹窗（默认隐藏） ===== -->
+  <div class="overlay" id="overlayDowngrade" style="display:none;">
+    <div class="dialog">
+      <h3 class="dialog__title">建议降级</h3>
+      <p class="dialog__msg" id="downgradeMsg"></p>
+      <button class="btn btn--primary" id="btnCloseDowngrade">知道了</button>
+    </div>
+  </div>
+
+  <!-- ===== OCR 识别弹窗（默认隐藏） ===== -->
+  <div class="overlay" id="overlayOCR" style="display:none;">
+    <div class="dialog" style="max-width:480px;">
+      <h3 class="dialog__title">📷 识别截图中的任务</h3>
+      <div id="ocrContent">
+        <div class="ocr-dropzone" id="ocrDropzone">点击或拖拽上传截图</div>
+        <p style="font-size:11px;color:#999;text-align:center;">支持 iPhone 备忘录截图、待办清单截图</p>
+      </div>
+      <div id="ocrProgress" class="ocr-progress" style="display:none;"></div>
+      <div id="ocrResults" style="display:none;"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;" id="ocrActions">
+        <button class="btn" id="btnOCRClose">关闭</button>
+        <button class="btn btn--primary" id="btnOCRSave" style="display:none;">确认添加选中任务</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Service Worker 注册 -->
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
+  </script>
+
+  <!-- JS 按依赖顺序加载 -->
+  <script src="js/storage.js"></script>
+  <script src="js/courses.js"></script>
+  <script src="js/evaluation.js"></script>
+  <script src="js/tasks.js"></script>
+  <script src="js/review.js"></script>
+  <script src="js/reminders.js"></script>
+  <script src="js/sleep.js"></script>
+  <script src="js/ocr.js"></script>
+  <script src="js/app.js"></script>
+  <!-- 首次自动导入课表（仅当课程为空时执行） -->
+  <script>
+  (function () {
+    /* 版本号检查，升级时自动重新导入 */
+    var importVer = localStorage.getItem('_importVersion');
+    if (importVer === '2') return;
+    localStorage.setItem('_importVersion', '2');
+    SW.Store.save('courses', []);
+    var courses = [
+      { name:"高等数学A(2)", dayOfWeek:1, startTime:"10:00", endTime:"11:40", startWeek:1, endWeek:16, location:"宝山主区 EJ403 温智婕", credits:5 },
+      { name:"大学化学实验", dayOfWeek:1, startTime:"13:00", endTime:"14:40", startWeek:1, endWeek:16, location:"宝山主区 HA四楼 付继芳", credits:1 },
+      { name:"线性代数", dayOfWeek:2, startTime:"08:00", endTime:"09:40", startWeek:1, endWeek:16, location:"宝山主区 FJ204 黄红娣", credits:3 },
+      { name:"大学物理A(2)", dayOfWeek:2, startTime:"10:00", endTime:"11:40", startWeek:1, endWeek:16, location:"宝山主区 EJ304 贾蓉蓉", credits:4 },
+      { name:"形势与政策", dayOfWeek:2, startTime:"13:00", endTime:"14:40", startWeek:12, endWeek:12, location:"宝山主区 EJ106 奚建群", credits:1 },
+      { name:"形势与政策", dayOfWeek:2, startTime:"13:00", endTime:"14:40", startWeek:16, endWeek:16, location:"宝山主区 EJ106 奚建群", credits:1 },
+      { name:"人工智能基础A", dayOfWeek:2, startTime:"15:00", endTime:"16:40", startWeek:1, endWeek:16, location:"宝山主区 FJ204 孙广玲", credits:2 },
+      { name:"大学英语A(2)", dayOfWeek:3, startTime:"08:00", endTime:"09:40", startWeek:1, endWeek:16, location:"宝山主区 C109 邵庆华", credits:2 },
+      { name:"高等数学A(2)", dayOfWeek:3, startTime:"10:00", endTime:"11:40", startWeek:1, endWeek:16, location:"宝山主区 EJ403 温智婕", credits:5 },
+      { name:"大学物理实验A(2)", dayOfWeek:3, startTime:"13:00", endTime:"14:40", startWeek:1, endWeek:16, location:"宝山主区 F楼实验中心 盛雷梅", credits:1 },
+      { name:"游泳(基础)", dayOfWeek:3, startTime:"15:00", endTime:"16:40", startWeek:9, endWeek:16, location:"宝山主区 游泳馆大池 刘超云", credits:1 },
+      { name:"中国近现代史纲要", dayOfWeek:3, startTime:"18:00", endTime:"20:45", startWeek:1, endWeek:16, location:"宝山主区 FJ403 王国斌", credits:2 },
+      { name:"511值班", dayOfWeek:4, startTime:"08:00", endTime:"09:40", startWeek:9, endWeek:16, location:"", credits:0 },
+      { name:"大学物理A(2)", dayOfWeek:4, startTime:"10:00", endTime:"11:40", startWeek:1, endWeek:16, location:"宝山主区 EJ304 贾蓉蓉", credits:4 },
+      { name:"大学生心理健康", dayOfWeek:4, startTime:"15:00", endTime:"16:40", startWeek:13, endWeek:15, location:"宝山主区 EJ103 海棠", credits:2 },
+      { name:"大学化学", dayOfWeek:5, startTime:"08:00", endTime:"09:40", startWeek:1, endWeek:16, location:"宝山主区 C109 袁帅", credits:2 },
+      { name:"高等数学A(2)", dayOfWeek:5, startTime:"10:00", endTime:"11:40", startWeek:1, endWeek:16, location:"宝山主区 EJ403 温智婕", credits:5 },
+      { name:"红歌视唱", dayOfWeek:5, startTime:"15:00", endTime:"16:40", startWeek:9, endWeek:16, location:"宝山主区 C117 陈迪芸", credits:1 }
+    ];
+    for (var i = 0; i < courses.length; i++) {
+      SW.Store.create('courses', courses[i]);
+    }
+    setTimeout(function () {
+      SW.Courses.renderCourseList();
+      if (SW.App && SW.App.refreshHome) SW.App.refreshHome();
+    }, 200);
+  })();
+  </script>
+</body>
+</html>
