@@ -9,22 +9,24 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--bg); color: var(--text); line-height: 1.5;
-  max-width: 720px; margin: 0 auto; padding: 0 12px 80px;
+  max-width: 720px; margin: 0 auto; padding: 12px 12px 56px;
   -webkit-text-size-adjust: 100%;
 }
 
-/* ===== 导航栏 ===== */
+/* ===== 导航栏（底部固定） ===== */
 .nav {
-  position: sticky; top: 0; z-index: 100; display: flex;
-  background: var(--surface); border-bottom: 1px solid var(--border);
-  margin: 0 -12px; padding: 0 4px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 100; display: flex; justify-content: space-around;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: 4px 12px env(safe-area-inset-bottom, 4px) 12px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
 }
 .nav__btn {
-  flex-shrink: 0; padding: 10px 14px; border: none; background: none;
-  font-size: 14px; color: var(--muted); cursor: pointer;
-  border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0; padding: 8px 10px; border: none; background: none;
+  font-size: 13px; color: var(--muted); cursor: pointer;
+  border-top: 2px solid transparent; transition: color 0.15s, border-color 0.15s;
 }
-.nav__btn--active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.nav__btn--active { color: var(--primary); border-top-color: var(--primary); font-weight: 600; }
 
 /* ===== 布局 ===== */
 .page { display: none; } .page--active { display: block; }
@@ -185,9 +187,9 @@ body {
 
 /* ===== 响应式 ===== */
 @media (max-width: 480px) {
-  body { padding: 0 8px 80px; }
-  .nav { margin: 0 -8px; justify-content: space-around; }
-  .nav__btn { padding: 10px 8px; font-size: 13px; }
+  body { padding: 8px 8px 52px; }
+  .nav { padding: 4px 8px env(safe-area-inset-bottom, 4px) 8px; }
+  .nav__btn { padding: 8px 6px; font-size: 12px; }
   .card { padding: 12px; margin-top: 10px; }
   .dialog { padding: 16px; }
   .dialog__btns { flex-direction: column; } .dialog__btns .btn { width: 100%; }
